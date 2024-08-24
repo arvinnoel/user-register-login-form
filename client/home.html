@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Page</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="styles/styles.css"> <!-- Link to your custom CSS -->
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>Registered Users</h2>
+        <div id="userList" class="mt-4"></div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div class="modal fade" id="editUserModal" tabindex="-1" role="dialog" aria-labelledby="editUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editUserModalLabel">Edit User</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="editUserForm">
+                        <input type="hidden" id="editUserId">
+                        <div class="form-group">
+                            <label for="editName">Name</label>
+                            <input type="text" class="form-control" id="editName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editEmail">Email</label>
+                            <input type="email" class="form-control" id="editEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editPhoneNo">Phone No</label>
+                            <input type="text" class="form-control" id="editPhoneNo" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editProfession">Profession</label>
+                            <input type="text" class="form-control" id="editProfession" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Update</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Fetch and display all registered users
+            fetchUsers();
+
+            function fetchUsers() {
+                $.ajax({
+                    type: 'GET',
+                    url: 'http://localhost:5000/api/users',
+                    success: function(users) {
+                        let userList = '';
+                        users.forEach(user => {
+                            userList += `
+                                <div class="user-item mb-3">
+                                    <h5>${user.name}</h5>
+                                    <p>Email: ${user.email}</p>
+                                    <p>Phone: ${user.phoneNo}</p>
+                                    <p>Profession: ${user.profession}</p>
+                                    <button class="btn btn-info btn-sm" onclick="editUser('${user._id}')">Edit</button>
+                                    <button class="btn btn-danger btn-sm" onclick="deleteUser('${user._id}')">Delete</button>
+                                </div>
+                            `;
+                        });
+                        $('#userList').html(userList);
+                    },
+                    error: function(xhr) {
+                        console.error('Error fetching users:', xhr.responseText);
+                    }
+                });
+            }
+
+            // Edit user function
+            window.editUser = function(id) {
+                $.ajax({
+                    type: 'GET',
+                    url: `http://localhost:5000/api/users/${id}`,
+                    success: function(user) {
+                        // Populate the edit form with user data
+                        $('#editUserId').val(user._id);
+                        $('#editName').val(user.name);
+                        $('#editEmail').val(user.email);
+                        $('#editPhoneNo').val(user.phoneNo);
+                        $('#editProfession').val(user.profession);
+
+                        // Show the edit user modal
+                        $('#editUserModal').modal('show');
+                    },
+                    error: function(xhr) {
+                        console.error('Error fetching user details:', xhr.responseText);
+                    }
+                });
+            };
+
+            // Handle the edit form submission
+            $('#editUserForm').on('submit', function(e) {
+                e.preventDefault();
+                const id = $('#editUserId').val();
+                const updatedData = {
+                    name: $('#editName').val(),
+                    email: $('#editEmail').val(),
+                    phoneNo: $('#editPhoneNo').val(),
+                    profession: $('#editProfession').val()
+                };
+                
+                $.ajax({
+                    type: 'PUT',
+                    url: `http://localhost:5000/api/users/${id}`,
+                    data: JSON.stringify(updatedData),
+                    contentType: 'application/json',
+                    success: function(response) {
+                        $('#editUserModal').modal('hide');
+                        fetchUsers(); // Refresh the user list
+                    },
+                    error: function(xhr) {
+                        console.error('Error updating user:', xhr.responseText);
+                    }
+                });
+            });
+
+            // Delete user function
+            window.deleteUser = function(id) {
+                if (confirm('Are you sure you want to delete this user?')) {
+                    $.ajax({
+                        type: 'DELETE',
+                        url: `http://localhost:5000/api/users/${id}`,
+                        success: function(response) {
+                            alert(response.msg);
+                            fetchUsers(); // Refresh the list after deletion
+                        },
+                        error: function(xhr) {
+                            console.error('Error deleting user:', xhr.responseText);
+                        }
+                    });
+                }
+            };
+        });
+    </script>
+</body>
+</html>
