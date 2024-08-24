@@ -2,11 +2,10 @@ const mongoose = require('mongoose');
 
 const connectDB = async () => {
     try {
-        // Connect to MongoDB without deprecated options
-        const conn = await mongoose.connect('mongodb://localhost:27017/ClippetAssesment');
+        const conn = await mongoose.connect('mongodb+srv://arvin:Noel%402024@cluster0.iy0srpl.mongodb.net/ClippetAssesment?retryWrites=true&w=majority&appName=Cluster0');
         console.log(`MongoDB Connected: ${conn.connection.host}`);
     } catch (err) {
-        console.error(err.message);
+        console.error('MongoDB connection error:', err.message);
         process.exit(1);
     }
 };
